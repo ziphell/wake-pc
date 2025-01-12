@@ -101,13 +101,14 @@ if (($config = parse_ini_file("config.ini", true)) == false) {
 					}
 					?>
 				</select>
+				<input style="display:none" type="text" id="username" name="username" value="<?= $pcConfigs[$pcSelected]["pcName"] ?>">
 				<?php
 				if ($pcConfig['password'] != "") {
 					$pwd = isset($_GET['pwd']) ? $_GET['pwd'] : "";
 					echo '
 						<div class="form-group mb-3" >
 							<label for="pwd">Password</label>
-							<input type="password" class="form-control" id="pwd" name="pwd" placeholder="Password" value="'.$pwd.'" autocomplete="off">
+							<input type="password" class="form-control" id="pwd" name="pwd" placeholder="Password" value="'.$pwd.'">
 						</div>
 						';
 				}
@@ -132,6 +133,9 @@ if (($config = parse_ini_file("config.ini", true)) == false) {
 <script>
 	function pcSelected() {
 		selected = document.getElementById("pc-select").value;
+		var username = document.getElementById("username");
+		var pcName = document.querySelector(`#pc-select option[value='${selected}']`).text;
+		username.value = pcName;
 		var url = new URL(window.location);
 		url.searchParams.set('pc', selected);
 		window.open(url, "_self");
