@@ -21,9 +21,12 @@ if (($config = parse_ini_file("config.ini", true)) == false) {
 			$pcConfig['password'] == ""
 		) {
 			// password ok/not needed, lets send WOL
-			$result = shell_exec("echo -e $(echo $(printf 'f%.0s' {1..12}; printf \"$(echo " . $pcConfig['mac'] . " | sed 's/://g')%.0s\" {1..16}) | sed -e 's/../\\\\x&/g') | nc -w1 -u -b " . $pcConfig['broadcast'] . " " . $pcConfig['wolPort'] . ' 2>&1; echo $?');
+			require __DIR__.'/Phpwol/Init.php';
+			$f = new \Phpwol\Factory();
+			$magicPacket = $f->magicPacket();
+			$result = $magicPacket->send($pcConfig['mac'], $pcConfig['broadcast']);
 			// check the status code of the above command, if 0 say OK otherwise print output
-			$status = trim($result) == "0" ? 'Magic packet sent to ' . $pcConfig['pcName'] : 'Failed to send WOL packet: <pre>' . $result . '</pre>';
+			$status = $result ? 'Magic packet sent' : 'Failed to send';
 		} else $status =  'Incorrect password';
 	}
 }
@@ -34,12 +37,56 @@ if (($config = parse_ini_file("config.ini", true)) == false) {
 <head>
 	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
 	<!-- Bootstrap 5.0.2 CSS -->
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+	<link href="css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 	<!-- Bootstrap 5.0.2 JS -->
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+	<script src="js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta charset="utf-8">
 	<title>⏰ Wake PC</title>
+    <style>
+        /* Dark mode styles */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #121212;
+                color: #ffffff;
+            }
+
+            .card {
+                background-color: #1e1e1e;
+                border-color: #333333;
+            }
+
+            .card-title {
+                color: #ffffff;
+            }
+
+            .form-select {
+                background-color: #333333;
+                color: #ffffff;
+                border-color: #444444;
+            }
+
+            .form-control {
+                background-color: #333333;
+                color: #ffffff;
+                border-color: #444444;
+            }
+
+            .btn-primary {
+                background-color: #0b5ed7;
+                border-color: #0b5ed7;
+            }
+
+            .btn-primary:hover {
+                background-color: #0a58ca;
+                border-color: #0a53be;
+            }
+
+            .text-center {
+                color: #ffffff;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -56,10 +103,11 @@ if (($config = parse_ini_file("config.ini", true)) == false) {
 				</select>
 				<?php
 				if ($pcConfig['password'] != "") {
+					$pwd = isset($_GET['pwd']) ? $_GET['pwd'] : "";
 					echo '
 						<div class="form-group mb-3" >
 							<label for="pwd">Password</label>
-							<input type="password" class="form-control" id="pwd" name="pwd" placeholder="Password">
+							<input type="password" class="form-control" id="pwd" name="pwd" placeholder="Password" value="'.$pwd.'" autocomplete="off">
 						</div>
 						';
 				}
